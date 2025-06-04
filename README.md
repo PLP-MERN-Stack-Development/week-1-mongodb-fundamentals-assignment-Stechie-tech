@@ -1,47 +1,181 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=19697539&assignment_repo_type=AssignmentRepo)
-# MongoDB Fundamentals Assignment
+# MongoDB Bookstore Queries
 
-This assignment focuses on learning MongoDB fundamentals including setup, CRUD operations, advanced queries, aggregation pipelines, and indexing.
+This repository contains MongoDB queries for a bookstore database, demonstrating various MongoDB operations and features.
 
-## Assignment Overview
+## 📚 Database Structure
 
-You will:
-1. Set up a MongoDB database
-2. Perform basic CRUD operations
-3. Write advanced queries with filtering, projection, and sorting
-4. Create aggregation pipelines for data analysis
-5. Implement indexing for performance optimization
+The database contains a collection of books with the following fields:
+- `title`: Book title
+- `author`: Author name
+- `genre`: Book genre
+- `published_year`: Year of publication
+- `price`: Book price
+- `in_stock`: Availability status
+- `pages`: Number of pages
+- `publisher`: Publisher name
 
-## Getting Started
+## 🔍 Basic CRUD Operations
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Install MongoDB locally or set up a MongoDB Atlas account
-4. Run the provided `insert_books.js` script to populate your database
-5. Complete the tasks in the assignment document
+### 1. Find Books by Genre
+```javascript
+db.books.find({ genre: "Fiction" });
+```
+This query retrieves all books in the "Fiction" genre.
 
-## Files Included
+### 2. Find Books Published After a Year
+```javascript
+db.books.find({ published_year: { $gt: 1950 } });
+```
+This query finds all books published after 1950.
 
-- `Week1-Assignment.md`: Detailed assignment instructions
-- `insert_books.js`: Script to populate your MongoDB database with sample book data
+### 3. Find Books by Author
+```javascript
+db.books.find({ author: "George Orwell" });
+```
+This query retrieves all books written by George Orwell.
 
-## Requirements
+### 4. Update Book Price
+```javascript
+db.books.updateOne(
+    { title: "To Kill a Mockingbird" },
+    { $set: { price: 14.99 } }
+);
+```
+This query updates the price of "To Kill a Mockingbird" to $14.99.
 
-- Node.js (v18 or higher)
-- MongoDB (local installation or Atlas account)
-- MongoDB Shell (mongosh) or MongoDB Compass
+### 5. Delete a Book
+```javascript
+db.books.deleteOne({ title: "Moby Dick" });
+```
+This query removes "Moby Dick" from the collection.
 
-## Submission
+## 🚀 Advanced Queries
 
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
+### 1. Find In-Stock Recent Books
+```javascript
+db.books.find({
+    in_stock: true,
+    published_year: { $gt: 2010 }
+});
+```
+This query finds books that are both in stock and published after 2010.
 
-1. Complete all tasks in the assignment
-2. Add your `queries.js` file with all required MongoDB queries
-3. Include a screenshot of your MongoDB database
-4. Update the README.md with your specific setup instructions
+### 2. Projection Query
+```javascript
+db.books.find(
+    {},
+    { title: 1, author: 1, price: 1, _id: 0 }
+);
+```
+This query returns only the title, author, and price fields for all books.
 
-## Resources
+### 3. Sorting Books by Price
+```javascript
+// Ascending order
+db.books.find().sort({ price: 1 });
 
-- [MongoDB Documentation](https://docs.mongodb.com/)
-- [MongoDB University](https://university.mongodb.com/)
-- [MongoDB Node.js Driver](https://mongodb.github.io/node-mongodb-native/) 
+// Descending order
+db.books.find().sort({ price: -1 });
+```
+These queries sort books by price in ascending and descending order.
+
+### 4. Pagination
+```javascript
+// First page (5 books)
+db.books.find().limit(5).skip(0);
+
+// Second page (5 books)
+db.books.find().limit(5).skip(5);
+```
+These queries implement pagination, showing 5 books per page.
+
+## 📊 Aggregation Pipeline
+
+### 1. Average Price by Genre
+```javascript
+db.books.aggregate([
+    {
+        $group: {
+            _id: "$genre",
+            averagePrice: { $avg: "$price" }
+        }
+    }
+]);
+```
+This pipeline calculates the average price of books for each genre.
+
+### 2. Author with Most Books
+```javascript
+db.books.aggregate([
+    {
+        $group: {
+            _id: "$author",
+            bookCount: { $sum: 1 }
+        }
+    },
+    {
+        $sort: { bookCount: -1 }
+    },
+    {
+        $limit: 1
+    }
+]);
+```
+This pipeline finds the author who has written the most books in the collection.
+
+### 3. Books by Publication Decade
+```javascript
+db.books.aggregate([
+    {
+        $group: {
+            _id: {
+                $floor: { $divide: ["$published_year", 10] }
+            },
+            count: { $sum: 1 }
+        }
+    },
+    {
+        $sort: { _id: 1 }
+    }
+]);
+```
+This pipeline groups books by their publication decade and counts them.
+
+## 📈 Indexing
+
+### 1. Single Field Index
+```javascript
+db.books.createIndex({ title: 1 });
+```
+Creates an index on the title field for faster searches.
+
+### 2. Compound Index
+```javascript
+db.books.createIndex({ author: 1, published_year: 1 });
+```
+Creates a compound index on author and published_year fields.
+
+### 3. Performance Analysis
+```javascript
+// Without index
+db.books.find({ title: "To Kill a Mockingbird" }).explain("executionStats");
+
+// With index
+db.books.find({ title: "To Kill a Mockingbird" }).explain("executionStats");
+```
+These queries demonstrate the performance improvement using indexes.
+
+## 🛠️ Setup and Usage
+
+1. Install MongoDB Community Edition
+2. Run the `insert_books.js` script to populate the database
+3. Use MongoDB Shell (mongosh) or MongoDB Compass to run the queries
+4. All queries are saved in `queries.js`
+
+## 📝 Notes
+
+- All queries are written in MongoDB shell syntax
+- The database name is `plp_bookstore`
+- The collection name is `books`
+- Make sure MongoDB is running before executing queries
+- Indexes should be created after data insertion for better performance 
